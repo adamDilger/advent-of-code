@@ -20,21 +20,25 @@ const (
 
 var LABELS = map[string]string{
 	"A": "Rock",
-	"X": "Rock",
 	"B": "Paper",
-	"Y": "Paper",
 	"C": "Scissors",
-	"Z": "Scissors",
+
+	"X": "Loss",
+	"Y": "Draw",
+	"Z": "Win",
 }
 
 var MOVE = map[string]int{
 	"A": ROCK,
-	"X": ROCK,
 	"B": PAPER,
-	"Y": PAPER,
 	"C": SCISSORS,
-	"Z": SCISSORS,
+
+	"X": LOSS,
+	"Y": DRAW,
+	"Z": WIN,
 }
+
+var MOVE_NUMBER = []string{"", "A", "B", "C"}
 
 func main() {
 	file, err := os.Open("./input.txt")
@@ -51,25 +55,11 @@ func main() {
 
 		lineSplit := strings.Split(line, " ")
 		m1 := lineSplit[0]
-		m2 := lineSplit[1]
+		wld := lineSplit[1]
 
-		fmt.Printf("GAME --- \n")
-		fmt.Printf("m1 %v: %v\n", m1, LABELS[m1])
-		fmt.Printf("m2 %v: %v\n", m2, LABELS[m2])
+		m2 := MOVE_NUMBER[calculateDesiredMove(m1, wld)]
 
 		r := calculateScore(m1, m2)
-
-		if r.Win {
-			fmt.Printf("WIN : ")
-		} else if r.Draw {
-			fmt.Printf("DRAW: ")
-		} else {
-			fmt.Printf("LOSS: ")
-		}
-
-		fmt.Printf("%d", r.Score)
-
-		fmt.Println()
 
 		total += r.Score
 	}
@@ -87,6 +77,33 @@ type result struct {
 	M1    int
 	M2    int
 	Score int
+}
+
+func calculateDesiredMove(a, winLossOrDraw string) int {
+	m1 := MOVE[a]
+	wld := MOVE[winLossOrDraw]
+
+	if wld == DRAW {
+		return m1
+	}
+
+	if wld == LOSS {
+		if m1 == ROCK {
+			return SCISSORS
+		} else if m1 == PAPER {
+			return ROCK
+		} else {
+			return PAPER
+		}
+	}
+
+	if m1 == ROCK {
+		return PAPER
+	} else if m1 == PAPER {
+		return SCISSORS
+	} else {
+		return ROCK
+	}
 }
 
 func calculateScore(a, b string) result {
