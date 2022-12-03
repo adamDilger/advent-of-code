@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 )
 
@@ -16,12 +17,21 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	var currentTotal int
-	var currentMax int
+	currentMaxes := []int{0, 0, 0}
 
+	var currentTotal int
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
+			for i, m := range currentMaxes {
+				if currentTotal > m {
+					currentMaxes[i] = currentTotal
+
+					sort.Ints(currentMaxes)
+					break
+				}
+			}
+
 			currentTotal = 0
 			continue
 		}
@@ -32,15 +42,19 @@ func main() {
 		}
 
 		currentTotal += cal
-
-		if currentTotal > currentMax {
-			currentMax = currentTotal
-		}
 	}
 
-	println(currentMax)
+	println(sum(currentMaxes))
 
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("scanner error: %v", err)
 	}
+}
+
+func sum(inputs []int) int {
+	var t int
+	for _, v := range inputs {
+		t += v
+	}
+	return t
 }
