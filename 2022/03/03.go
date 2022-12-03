@@ -17,20 +17,22 @@ func main() {
 	total := 0
 
 	for scanner.Scan() {
-		line := scanner.Text()
-
-		length := len(line) / 2
-		l := line[:length]
-		r := line[length:]
+		line1 := scanner.Text()
+		scanner.Scan()
+		line2 := scanner.Text()
+		scanner.Scan()
+		line3 := scanner.Text()
 
 		var dupe rune
 
 	RowLoop:
-		for _, lc := range l {
-			for _, rc := range r {
-				if rc == lc {
-					dupe = lc
-					break RowLoop
+		for _, one := range line1 {
+			for _, two := range line2 {
+				for _, three := range line3 {
+					if one == two && two == three {
+						dupe = one
+						break RowLoop
+					}
 				}
 			}
 		}
