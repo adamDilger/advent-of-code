@@ -42,9 +42,11 @@ func main() {
 		println(pair1.start, pair1.end)
 		println(pair2.start, pair2.end)
 
-		if pair1.start >= pair2.start && pair1.end <= pair2.end ||
+		if pair1.start >= pair2.start && pair1.start <= pair2.end ||
+			pair1.end <= pair2.end && pair1.end >= pair2.start ||
+			pair1.start >= pair2.start && pair1.end <= pair2.end ||
 			pair2.start >= pair1.start && pair2.end <= pair1.end {
-
+			println("MATCH")
 			count++
 		}
 	}
