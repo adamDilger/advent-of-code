@@ -59,7 +59,7 @@ func main() {
 		toStack := stacks[to-1]
 
 		tmp := stack[len(stack)-amount:]
-		reverse(tmp)
+		// reverse(tmp)
 
 		stacks[from-1] = stack[:len(stack)-amount]
 		stacks[to-1] = append(toStack, tmp...)
