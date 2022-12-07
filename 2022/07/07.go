@@ -124,26 +124,27 @@ func main() {
 	root.calculateDirectoryTotals()
 	root.p()
 
-	var maxes []*File
-	bfs(root, &maxes)
+	totalSize := 70000000
+	totalAvailable := totalSize - root.Size
+	totalRequired := 30000000 - totalAvailable
 
-	count := 0
-	for _, m := range maxes {
-		count += m.Size
-	}
-	println(count)
+	biggest := bfs(root, totalRequired, root.Size)
+
+	println(biggest)
 }
 
-func bfs(dir *File, maxes *[]*File) {
+func bfs(dir *File, required, biggest int) int {
 	if !dir.IsDir {
-		return
+		return biggest
 	}
 
-	if dir.Size <= 100000 {
-		*maxes = append(*maxes, dir)
+	if dir.Size > required && dir.Size < biggest {
+		biggest = dir.Size
 	}
 
 	for _, child := range dir.Children {
-		bfs(child, maxes)
+		biggest = bfs(child, required, biggest)
 	}
+
+	return biggest
 }
