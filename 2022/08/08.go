@@ -24,13 +24,15 @@ func main() {
 	width := len(lines[0])
 	height := len(lines)
 
-	count := 0
+	highest := 0
 
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			if isVisible(x, y, lines) {
-				count++
+			score := isVisible(x, y, lines)
+			if score > highest {
+				highest = score
 			}
+			// println("SCORE", score)
 		}
 
 		// if y == 2 {
@@ -38,89 +40,57 @@ func main() {
 		// }
 	}
 
-	println(count)
+	println(highest)
 }
 
-func isVisible(x, y int, lines []string) bool {
+func isVisible(x, y int, lines []string) int {
 	char, _ := strconv.Atoi(string(lines[y][x]))
 	// println(char)
 
-	obstructed := false
+	var up, down, left, right int
 
 	for i := y - 1; i >= 0; i-- {
+		up++
 		char1, _ := strconv.Atoi(string(lines[i][x]))
 		if char1 >= char {
 			// println("FUK", char, char1)
-			obstructed = true
 			break
 		} else {
-			// println("NO", char, char1)
 		}
 	}
-
-	if obstructed == false {
-		// println(x, y, char)
-		return true
-	}
-
-	obstructed = false
 
 	// down
 	for i := y + 1; i < len(lines); i++ {
+		down++
 		char1, _ := strconv.Atoi(string(lines[i][x]))
 		if char1 >= char {
 			// println("FUK", char, char1)
-			obstructed = true
 			break
 		} else {
-			// println("NO", char, char1)
 		}
 	}
-
-	if obstructed == false {
-		// println(x, y, char)
-		return true
-	}
-
-	obstructed = false
 
 	// left
 	for i := x - 1; i >= 0; i-- {
+		left++
 		char1, _ := strconv.Atoi(string(lines[y][i]))
 		if char1 >= char {
 			// println("FUK", char, char1)
-			obstructed = true
 			break
 		} else {
-			// println("NO", char, char1)
 		}
 	}
-
-	if obstructed == false {
-		// println(x, y, char)
-		return true
-	}
-
-	obstructed = false
 
 	// right
 	for i := x + 1; i < len(lines[0]); i++ {
+		right++
 		char1, _ := strconv.Atoi(string(lines[y][i]))
 		if char1 >= char {
 			// println("FUK", char, char1)
-			obstructed = true
 			break
 		} else {
-			// println("NO", char, char1)
 		}
 	}
 
-	if obstructed == false {
-		// println(x, y, char)
-		return true
-	}
-
-	obstructed = false
-
-	return false
+	return up * down * left * right
 }
