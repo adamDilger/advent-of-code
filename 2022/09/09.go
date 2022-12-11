@@ -30,7 +30,7 @@ type Point struct {
 }
 
 type Game struct {
-	Points [2]Point
+	Points [10]Point
 	Moves  []Move
 
 	TailPositions map[string]struct{}
@@ -88,6 +88,8 @@ func (g *Game) printMap() {
 						print(string(HEAD))
 					case len(g.Points) - 1:
 						print(string(TAIL))
+					default:
+						print(pi)
 					}
 
 					m = true
@@ -161,12 +163,17 @@ func (g *Game) align(index int) {
 }
 
 func main() {
-	input, err := os.Open("test.txt")
+	input, err := os.Open("input.txt")
 	if err != nil {
 		panic(err)
 	}
 
 	var game Game
+	for i := range game.Points {
+		game.Points[i].x = 30
+		game.Points[i].y = 30
+	}
+
 	scanner := bufio.NewScanner(input)
 
 	for scanner.Scan() {
@@ -178,6 +185,7 @@ func main() {
 		game.Moves = append(game.Moves, m)
 	}
 
+	// for mIndex, m := range game.Moves {
 	for _, m := range game.Moves {
 		// fmt.Printf("\n%c %d\n", m.Direction, m.Value)
 
@@ -201,8 +209,13 @@ func main() {
 
 			game.logTail()
 		}
+
+		// if mIndex == 3 {
+		// 	break
+		// }
+
+		game.printMap()
 	}
-	game.printMap()
 
 	println(len(game.TailPositions))
 }
