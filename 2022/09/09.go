@@ -9,7 +9,7 @@ import (
 
 const (
 	HEAD  = 'H'
-	TAIL  = 'N'
+	TAIL  = 'T'
 	START = 's'
 	UP    = 'U'
 	DOWN  = 'D'
@@ -30,8 +30,8 @@ type Point struct {
 }
 
 type Game struct {
-	Head, Tail Point
-	Moves      []Move
+	Points [2]Point
+	Moves  []Move
 
 	TailPositions map[string]struct{}
 }
@@ -41,25 +41,31 @@ func (g *Game) logTail() {
 		g.TailPositions = make(map[string]struct{})
 	}
 
-	pos := fmt.Sprintf("%d,%d", g.Tail.x, g.Tail.y)
+	tailPoint := g.Points[len(g.Points)-1]
+
+	pos := fmt.Sprintf("%d,%d", tailPoint.x, tailPoint.y)
 	g.TailPositions[pos] = struct{}{}
 }
 
 func (g *Game) printMap() {
 	// get the max point of both head and tail, and print a loop
 
-	maxX := g.Head.x
-	if g.Tail.x > g.Head.x {
-		maxX = g.Tail.x
+	maxX := 0
+	for _, x := range g.Points {
+		if x.x > maxX {
+			maxX = x.x
+		}
 	}
 
-	maxY := g.Head.y
-	if g.Tail.y > g.Head.y {
-		maxY = g.Tail.y
+	maxY := 0
+	for _, y := range g.Points {
+		if y.y > maxY {
+			maxY = y.y
+		}
 	}
 
-	maxX += 4
-	maxY += 3
+	maxX += 5
+	maxY += 5
 
 	for x := 0; x <= maxX; x++ {
 		if x == 0 {
@@ -73,11 +79,23 @@ func (g *Game) printMap() {
 	for y := maxY; y >= 0; y-- {
 		fmt.Printf("%2d", y)
 		for x := 0; x <= maxX; x++ {
-			if g.Head.x == x && g.Head.y == y {
-				print("H")
-			} else if g.Tail.x == x && g.Tail.y == y {
-				print("T")
-			} else {
+			m := false
+
+			for pi, headPoint := range g.Points {
+				if headPoint.x == x && headPoint.y == y {
+					switch pi {
+					case 0:
+						print(string(HEAD))
+					case len(g.Points) - 1:
+						print(string(TAIL))
+					}
+
+					m = true
+					break
+				}
+			}
+
+			if !m {
 				print(".")
 			}
 		}
@@ -85,85 +103,71 @@ func (g *Game) printMap() {
 	}
 }
 
-func (g *Game) alignX() {
-	if g.Tail.x < g.Head.x {
-		g.Tail.x++
-	} else if g.Tail.x > g.Head.x {
-		g.Tail.x--
+func (g *Game) adjustY(index int) {
+	headPoint := &g.Points[index-1]
+	tailPoint := &g.Points[index]
+
+	if headPoint.y > tailPoint.y {
+		tailPoint.y++
+	} else if headPoint.y < tailPoint.y {
+		tailPoint.y--
 	}
 }
 
-func (g *Game) alignY() {
-	if g.Tail.y < g.Head.y {
-		g.Tail.y++
-	} else if g.Tail.y > g.Head.y {
-		g.Tail.y--
+func (g *Game) adjustX(index int) {
+	headPoint := &g.Points[index-1]
+	tailPoint := &g.Points[index]
+
+	if headPoint.x > tailPoint.x {
+		tailPoint.x++
+	} else if headPoint.x < tailPoint.x {
+		tailPoint.x--
 	}
 }
 
-func (g *Game) up() {
-	g.Head.y++
+func (g *Game) align(index int) {
+	headPoint := &g.Points[index-1]
+	tailPoint := &g.Points[index]
 
-	if g.Tail.y+1 == g.Head.y {
-		return
+	// X
+	if headPoint.x < tailPoint.x {
+		if tailPoint.x-headPoint.x > 1 {
+			tailPoint.x--
+			g.adjustY(index)
+		}
 	}
 
-	if g.Tail.y+2 == g.Head.y {
-		g.Tail.y++
-		g.alignX()
-	}
-}
-
-func (g *Game) down() {
-	g.Head.y--
-
-	if g.Tail.y-1 == g.Head.y {
-		return
+	if headPoint.x > tailPoint.x {
+		if headPoint.x-tailPoint.x > 1 {
+			tailPoint.x++
+			g.adjustY(index)
+		}
 	}
 
-	if g.Tail.y-2 == g.Head.y {
-		g.Tail.y--
-		g.alignX()
-	}
-}
-
-func (g *Game) left() {
-	g.Head.x--
-
-	if g.Tail.x-1 == g.Head.x {
-		return
+	// Y
+	if headPoint.y < tailPoint.y {
+		if tailPoint.y-headPoint.y > 1 {
+			tailPoint.y--
+			g.adjustX(index)
+		}
 	}
 
-	if g.Tail.x-2 == g.Head.x {
-		g.Tail.x--
-		g.alignY()
-	}
-}
-
-func (g *Game) right() {
-	g.Head.x++
-
-	if g.Tail.x+1 == g.Head.x {
-		return
-	}
-
-	if g.Tail.x+2 == g.Head.x {
-		g.Tail.x++
-		g.alignY()
+	if headPoint.y > tailPoint.y {
+		if headPoint.y-tailPoint.y > 1 {
+			tailPoint.y++
+			g.adjustX(index)
+		}
 	}
 }
 
 func main() {
-	input, err := os.Open("input.txt")
+	input, err := os.Open("test.txt")
 	if err != nil {
 		panic(err)
 	}
 
 	var game Game
 	scanner := bufio.NewScanner(input)
-
-	game.Head = Point{x: 0, y: 0}
-	game.Tail = Point{x: 0, y: 0}
 
 	for scanner.Scan() {
 		var dir string
@@ -177,26 +181,28 @@ func main() {
 	for _, m := range game.Moves {
 		// fmt.Printf("\n%c %d\n", m.Direction, m.Value)
 
-		var fn func()
-
-		switch m.Direction {
-		case UP:
-			fn = game.up
-		case DOWN:
-			fn = game.down
-		case LEFT:
-			fn = game.left
-		case RIGHT:
-			fn = game.right
-		}
+		head := &game.Points[0]
 
 		for i := 0; i < m.Value; i++ {
-			fn()
+			switch m.Direction {
+			case UP:
+				head.y++
+			case DOWN:
+				head.y--
+			case LEFT:
+				head.x--
+			case RIGHT:
+				head.x++
+			}
+
+			for j := 1; j < len(game.Points); j++ {
+				game.align(j)
+			}
+
 			game.logTail()
 		}
-
-		// game.printMap()
 	}
+	game.printMap()
 
 	println(len(game.TailPositions))
 }
