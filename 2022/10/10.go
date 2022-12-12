@@ -10,6 +10,9 @@ import (
 const (
 	NOOP = "noop"
 	ADDX = "addx"
+
+	WIDTH  = 40
+	HEIGHT = 6
 )
 
 type Comms struct {
@@ -18,11 +21,7 @@ type Comms struct {
 
 func (c *Comms) tick() {
 	c.Cycle++
-
-	if c.Cycle%40 == 20 {
-		println(c.Cycle, c.X, c.Cycle*c.X)
-		c.StrengthSignal += c.Cycle * c.X
-	}
+	c.draw()
 }
 
 func (c *Comms) addX(val string) {
@@ -34,6 +33,24 @@ func (c *Comms) addX(val string) {
 	c.tick()
 	c.tick()
 	c.X += i
+}
+
+func (c *Comms) draw() {
+	cx := (c.Cycle - 1) % 40
+
+	if cx == 0 {
+		println()
+	}
+
+	if c.X+1 == cx {
+		print("#")
+	} else if c.X-1 == cx {
+		print("#")
+	} else if c.X == cx {
+		print("#")
+	} else {
+		print(".")
+	}
 }
 
 func main() {
@@ -60,5 +77,5 @@ func main() {
 		}
 	}
 
-	println(comms.StrengthSignal)
+	println()
 }
