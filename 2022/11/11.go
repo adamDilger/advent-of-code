@@ -106,7 +106,12 @@ func main() {
 		monkeys = append(monkeys, m)
 	}
 
-	for i := 0; i < 20; i++ {
+	totalMod := 1
+	for _, m := range monkeys {
+		totalMod *= m.Test.ByValue
+	}
+
+	for i := 0; i < 10000; i++ {
 
 		for mi := range monkeys {
 			m := &monkeys[mi]
@@ -118,6 +123,8 @@ func main() {
 				newValue := ii
 
 				m.TotalItemsInspected++
+
+				newValue = newValue % totalMod
 
 				opVal := m.OperationValue
 				if m.OperationValueOld {
@@ -133,9 +140,9 @@ func main() {
 					newValue = newValue * opVal
 				}
 
-				log(newValue)
-				newValue = newValue / 3
-				log(newValue)
+				// log(newValue)
+				// newValue = newValue / 3
+				// log(newValue)
 
 				if newValue%m.Test.ByValue == 0 {
 					monkeys[m.Test.TrueTarget].Items = append(monkeys[m.Test.TrueTarget].Items, newValue)
