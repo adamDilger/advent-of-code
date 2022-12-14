@@ -119,31 +119,15 @@ func (g *Grid) newNode(point Point) *Node {
 
 		weight := -1
 
-		// current 83
-		// next    82
-		//  83 - 82 = 1 | 1 + 1 = 1
-
-		// current 83
-		// next    83
-		//  83 - 83 = 0 | 0 + 1 = 1
-
-		// current 83
-		// next    84
-		// 1
-
-		// 83 - 82 = 1 + 2 = 3
-
-		if nextChar == n.Value {
+		if nextChar-1 == n.Value {
 			weight = 1
-			// } else if nextChar < n.Value {
-			// 	weight = int(n.Value-nextChar) + 1
-		} else if nextChar == n.Value+1 {
-			weight = 0
+		} else if nextChar <= n.Value {
+			weight = int(n.Value) - int(nextChar) + 2
+		} else {
+			return
 		}
 
-		if weight != -1 {
-			n.Edges[p.getKey()] = weight
-		}
+		n.Edges[p.getKey()] = weight
 	}
 
 	if y != 0 {
@@ -240,10 +224,9 @@ func main() {
 			if n.ShortestPathVal+eWeight < eNode.ShortestPathVal {
 				eNode.ShortestPathVal = n.ShortestPathVal + eWeight
 				eNode.ShortestPathVia = n
+				heap.Push(heapNodes, eNode)
+				heap.Fix(heapNodes, eNode.HeapIndex)
 			}
-
-			heap.Push(heapNodes, eNode)
-			heap.Fix(heapNodes, eNode.HeapIndex)
 		}
 	}
 
