@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
+	"container/heap"
 	"fmt"
 	"math"
 	"os"
-	"sort"
 )
 
 const debug = true
@@ -95,6 +95,8 @@ func (g *Grid) newNode(point Point) *Node {
 
 		ShortestPathVal: math.MaxInt,
 		ShortestPathVia: nil,
+
+		HeapIndex: -1,
 	}
 	n.Edges = make(map[string]int)
 
@@ -109,6 +111,11 @@ func (g *Grid) newNode(point Point) *Node {
 
 	checkEdge := func(p Point) {
 		nextChar := g.Grid[p.y][p.x]
+		if nextChar == START {
+			nextChar = 'a'
+		} else if nextChar == END {
+			nextChar = 'z'
+		}
 
 		weight := -1
 
@@ -128,8 +135,8 @@ func (g *Grid) newNode(point Point) *Node {
 
 		if nextChar == n.Value {
 			weight = 1
-		} else if nextChar < n.Value {
-			weight = int(n.Value-nextChar) + 1
+			// } else if nextChar < n.Value {
+			// 	weight = int(n.Value-nextChar) + 1
 		} else if nextChar == n.Value+1 {
 			weight = 0
 		}
@@ -166,6 +173,8 @@ type Node struct {
 
 	ShortestPathVal int
 	ShortestPathVia *Node
+
+	HeapIndex int
 }
 
 type Graph struct {
@@ -175,7 +184,8 @@ type Graph struct {
 }
 
 func main() {
-	file, err := os.Open("test.txt")
+	file, err := os.Open("input.txt")
+	// file, err := os.Open("test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -202,14 +212,23 @@ func main() {
 	visited := make(map[string]struct{})
 
 	startNode := grid.startPoint()
-	nodes := []*Node{startNode}
+	startNode.HeapIndex = 0
+	heapNodes := &NodeHeap{}
+	heap.Push(heapNodes, startNode)
 
-	for len(nodes) != 0 {
-		n := nodes[0]
+	c := 0
+
+	for heapNodes.Len() != 0 {
+		n := heap.Pop(heapNodes).(*Node)
+
+		visited[n.getKey()] = struct{}{}
 
 		if n.End {
 			break
 		}
+
+		c++
+		println(c)
 
 		for eKey, eWeight := range n.Edges {
 			if _, ok := visited[eKey]; ok {
@@ -217,20 +236,15 @@ func main() {
 			}
 
 			eNode := grid.Nodes[eKey]
-			nodes = append(nodes, eNode)
 
 			if n.ShortestPathVal+eWeight < eNode.ShortestPathVal {
 				eNode.ShortestPathVal = n.ShortestPathVal + eWeight
 				eNode.ShortestPathVia = n
 			}
+
+			heap.Push(heapNodes, eNode)
+			heap.Fix(heapNodes, eNode.HeapIndex)
 		}
-
-		visited[n.getKey()] = struct{}{}
-		nodes = nodes[1:]
-
-		sort.Slice(nodes, func(i, j int) bool {
-			return nodes[i].ShortestPathVal < nodes[j].ShortestPathVal
-		})
 	}
 
 	fmt.Println()
@@ -247,4 +261,34 @@ func main() {
 	}
 
 	println(count)
+}
+
+type NodeHeap []*Node
+
+func (h NodeHeap) Len() int { return len(h) }
+func (h NodeHeap) Less(i, j int) bool {
+	return h[i].ShortestPathVal < h[j].ShortestPathVal
+}
+func (h NodeHeap) Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
+	h[i].HeapIndex = i
+	h[j].HeapIndex = j
+}
+
+func (h *NodeHeap) Push(x any) {
+	// *h = append(*h, x.(*Node))
+	n := len(*h)
+	item := x.(*Node)
+	item.HeapIndex = n
+	*h = append(*h, item)
+}
+
+func (h *NodeHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	old[n-1] = nil   // avoid memory leak
+	x.HeapIndex = -1 // for safety
+	*h = old[0 : n-1]
+	return x
 }
