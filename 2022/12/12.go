@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
 )
 
 const debug = true
@@ -49,17 +48,9 @@ func (p *Point) down() Point {
 }
 
 type Grid struct {
-	X, Y int
-	Grid [][]rune
-}
-
-// copy a map
-func copyMap(input map[string]struct{}) map[string]struct{} {
-	c := make(map[string]struct{})
-	for k, v := range input {
-		c[k] = v
-	}
-	return c
+	X, Y  int
+	Grid  [][]rune
+	Nodes map[string]*Node
 }
 
 func (g *Grid) printGrid() {
@@ -84,6 +75,72 @@ func (g *Grid) getStart() Point {
 	panic("No start found")
 }
 
+func (g *Grid) newNode(point Point) *Node {
+	x, y := point.x, point.y
+	char := g.Grid[y][x]
+
+	n := &Node{
+		Point: point,
+		Value: char,
+	}
+	n.Edges = make(map[string]int)
+
+	if char == START {
+		n.Start = true
+		char = 'a'
+	} else if char == END {
+		n.End = true
+		char = 'z'
+	}
+
+	checkEdge := func(p Point) {
+		nextChar := g.Grid[p.y][p.x]
+
+		var weight int
+
+		if nextChar < char {
+			weight = int(char-nextChar) + 2
+		} else if nextChar == char {
+			weight = 2
+		} else if nextChar == char+1 {
+			weight = 1
+		}
+
+		if weight != 0 {
+			n.Edges[p.getKey()] = weight
+		}
+	}
+
+	if y != 0 {
+		checkEdge(point.up())
+	}
+
+	if y < len(g.Grid)-2 {
+		checkEdge(point.down())
+	}
+
+	if x != 0 {
+		checkEdge(point.left())
+	}
+
+	if x < len(g.Grid[y])-2 {
+		checkEdge(point.right())
+	}
+
+	return n
+}
+
+type Node struct {
+	Point
+	Value      rune
+	Start, End bool
+	Edges      map[string]int
+}
+
+type Graph struct {
+	Nodes map[string]Node
+}
+
 func elev(i rune) rune {
 	if i == START {
 		return 'a'
@@ -92,68 +149,6 @@ func elev(i rune) rune {
 	}
 
 	return i
-}
-
-func (g *Grid) search(prev, curr Point, pathLength int, visited map[string]struct{}) int {
-	if curr.y < 0 || curr.y == len(g.Grid) {
-		return 0
-	}
-
-	if curr.x < 0 || curr.x == len(g.Grid[curr.y]) {
-		return 0
-	}
-
-	// point is in grid
-	char := g.Grid[curr.y][curr.x]
-	prevChar := g.Grid[prev.y][prev.x]
-
-	charElev := elev(char)
-	prevCharElev := elev(prevChar)
-
-	if charElev-1 > prevCharElev {
-		// too high
-		return 0
-	}
-
-	log("FUK", curr.x, curr.y, prev.x, prev.y)
-	if _, ok := visited[curr.getKey()]; ok {
-		return 0
-	}
-
-	pathLength++
-	visited[curr.getKey()] = struct{}{}
-
-	if char == END {
-		fmt.Println("END found", pathLength)
-		return pathLength
-	}
-
-	foundRight := g.search(curr, curr.right(), pathLength, visited)
-	foundDown := g.search(curr, curr.down(), pathLength, visited)
-	foundLeft := g.search(curr, curr.left(), pathLength, visited)
-	foundUp := g.search(curr, curr.up(), pathLength, visited)
-
-	if foundRight+foundDown+foundLeft+foundUp == 0 {
-		return 0
-	}
-
-	res := []int{}
-	if foundRight != 0 {
-		res = append(res, foundRight)
-	}
-	if foundLeft != 0 {
-		res = append(res, foundLeft)
-	}
-	if foundDown != 0 {
-		res = append(res, foundDown)
-	}
-	if foundUp != 0 {
-		res = append(res, foundUp)
-	}
-
-	sort.Ints(res)
-
-	return res[0]
 }
 
 func main() {
@@ -165,6 +160,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	var grid Grid
+	grid.Nodes = make(map[string]*Node)
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -173,8 +169,13 @@ func main() {
 		grid.Grid = append(grid.Grid, []rune(line))
 	}
 
-	startPoint := grid.getStart()
+	for y := range grid.Grid {
+		for x := range grid.Grid[y] {
+			n := grid.newNode(Point{x: x, y: y})
+			grid.Nodes[n.getKey()] = n
+		}
+	}
 
-	visited := make(map[string]struct{})
-	log(grid.search(startPoint, startPoint.down(), 0, visited))
+	sp := grid.getStart()
+	fmt.Println(grid.Nodes[sp.getKey()])
 }
