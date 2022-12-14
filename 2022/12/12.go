@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
+	"sort"
 )
 
 const debug = true
@@ -63,12 +65,20 @@ func (g *Grid) printGrid() {
 	}
 }
 
-func (g *Grid) getStart() Point {
-	for y := range g.Grid {
-		for x, c := range g.Grid[y] {
-			if c == START {
-				return Point{x: x, y: y}
-			}
+func (g *Grid) endPoint() *Node {
+	for _, n := range g.Nodes {
+		if n.End {
+			return n
+		}
+	}
+
+	panic("No end found")
+}
+
+func (g *Grid) startPoint() *Node {
+	for _, n := range g.Nodes {
+		if n.Start {
+			return n
 		}
 	}
 
@@ -82,31 +92,49 @@ func (g *Grid) newNode(point Point) *Node {
 	n := &Node{
 		Point: point,
 		Value: char,
+
+		ShortestPathVal: math.MaxInt,
+		ShortestPathVia: nil,
 	}
 	n.Edges = make(map[string]int)
 
 	if char == START {
 		n.Start = true
-		char = 'a'
+		n.ShortestPathVal = 0
+		n.Value = 'a'
 	} else if char == END {
 		n.End = true
-		char = 'z'
+		n.Value = 'z'
 	}
 
 	checkEdge := func(p Point) {
 		nextChar := g.Grid[p.y][p.x]
 
-		var weight int
+		weight := -1
 
-		if nextChar < char {
-			weight = int(char-nextChar) + 2
-		} else if nextChar == char {
-			weight = 2
-		} else if nextChar == char+1 {
+		// current 83
+		// next    82
+		//  83 - 82 = 1 | 1 + 1 = 1
+
+		// current 83
+		// next    83
+		//  83 - 83 = 0 | 0 + 1 = 1
+
+		// current 83
+		// next    84
+		// 1
+
+		// 83 - 82 = 1 + 2 = 3
+
+		if nextChar == n.Value {
 			weight = 1
+		} else if nextChar < n.Value {
+			weight = int(n.Value-nextChar) + 1
+		} else if nextChar == n.Value+1 {
+			weight = 0
 		}
 
-		if weight != 0 {
+		if weight != -1 {
 			n.Edges[p.getKey()] = weight
 		}
 	}
@@ -115,7 +143,7 @@ func (g *Grid) newNode(point Point) *Node {
 		checkEdge(point.up())
 	}
 
-	if y < len(g.Grid)-2 {
+	if y < len(g.Grid)-1 {
 		checkEdge(point.down())
 	}
 
@@ -123,7 +151,7 @@ func (g *Grid) newNode(point Point) *Node {
 		checkEdge(point.left())
 	}
 
-	if x < len(g.Grid[y])-2 {
+	if x < len(g.Grid[y])-1 {
 		checkEdge(point.right())
 	}
 
@@ -135,24 +163,19 @@ type Node struct {
 	Value      rune
 	Start, End bool
 	Edges      map[string]int
+
+	ShortestPathVal int
+	ShortestPathVia *Node
 }
 
 type Graph struct {
 	Nodes map[string]Node
-}
 
-func elev(i rune) rune {
-	if i == START {
-		return 'a'
-	} else if i == END {
-		return 'z'
-	}
-
-	return i
+	Seen map[string]struct{}
 }
 
 func main() {
-	file, err := os.Open("input.txt")
+	file, err := os.Open("test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -176,6 +199,52 @@ func main() {
 		}
 	}
 
-	sp := grid.getStart()
-	fmt.Println(grid.Nodes[sp.getKey()])
+	visited := make(map[string]struct{})
+
+	startNode := grid.startPoint()
+	nodes := []*Node{startNode}
+
+	for len(nodes) != 0 {
+		n := nodes[0]
+
+		if n.End {
+			break
+		}
+
+		for eKey, eWeight := range n.Edges {
+			if _, ok := visited[eKey]; ok {
+				continue
+			}
+
+			eNode := grid.Nodes[eKey]
+			nodes = append(nodes, eNode)
+
+			if n.ShortestPathVal+eWeight < eNode.ShortestPathVal {
+				eNode.ShortestPathVal = n.ShortestPathVal + eWeight
+				eNode.ShortestPathVia = n
+			}
+		}
+
+		visited[n.getKey()] = struct{}{}
+		nodes = nodes[1:]
+
+		sort.Slice(nodes, func(i, j int) bool {
+			return nodes[i].ShortestPathVal < nodes[j].ShortestPathVal
+		})
+	}
+
+	fmt.Println()
+
+	fmt.Println(grid.startPoint())
+	fmt.Println(grid.endPoint())
+
+	count := 0
+	p := grid.endPoint()
+	for !p.Start {
+		fmt.Printf("%c at %s\n", p.Value, p.key)
+		p = p.ShortestPathVia
+		count++
+	}
+
+	println(count)
 }
