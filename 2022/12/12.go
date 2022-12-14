@@ -11,8 +11,8 @@ import (
 const debug = true
 
 const (
-	START = 'S'
-	END   = 'E'
+	START = 'E'
+	END   = 'S'
 )
 
 func log(args ...any) {
@@ -103,10 +103,10 @@ func (g *Grid) newNode(point Point) *Node {
 	if char == START {
 		n.Start = true
 		n.ShortestPathVal = 0
-		n.Value = 'a'
+		n.Value = 'z'
 	} else if char == END {
 		n.End = true
-		n.Value = 'z'
+		n.Value = 'a'
 	}
 
 	checkEdge := func(p Point) {
@@ -119,9 +119,9 @@ func (g *Grid) newNode(point Point) *Node {
 
 		weight := -1
 
-		if nextChar-1 == n.Value {
+		if nextChar+1 == n.Value {
 			weight = 1
-		} else if nextChar <= n.Value {
+		} else if nextChar >= n.Value {
 			weight = int(n.Value) - int(nextChar) + 2
 		} else {
 			return
@@ -202,12 +202,15 @@ func main() {
 
 	c := 0
 
+	var end *Node
+
 	for heapNodes.Len() != 0 {
 		n := heap.Pop(heapNodes).(*Node)
 
 		visited[n.getKey()] = struct{}{}
 
-		if n.End {
+		if n.Value == 'a' {
+			end = n
 			break
 		}
 
@@ -233,10 +236,9 @@ func main() {
 	fmt.Println()
 
 	fmt.Println(grid.startPoint())
-	fmt.Println(grid.endPoint())
 
 	count := 0
-	p := grid.endPoint()
+	p := end
 	for !p.Start {
 		fmt.Printf("%c at %s\n", p.Value, p.key)
 		p = p.ShortestPathVia
