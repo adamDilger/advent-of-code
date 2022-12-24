@@ -10,33 +10,51 @@ import (
 type Item struct {
 	List    bool
 	Val     int
-	ListVal []Item
+	ListVal []*Item
 }
 
-func buildItems(nodes []Node, index *int, currItemsPtr *[]*Item) *Item {
-	node := nodes[*index]
-
-	*index++
-
-	n := len((*currItemsPtr)) - 1
-
-	// end
-	if node.end {
-		e := (*currItemsPtr)[n]
-		(*currItemsPtr) = (*currItemsPtr)[:n]
-
-		return e
+func (i *Item) printAll(newline bool) {
+	for _, c := range i.ListVal {
+		if c.List {
+			fmt.Print("[")
+			c.printAll(false)
+			fmt.Print("]")
+		} else {
+			fmt.Print(c.Val, ",")
+		}
 	}
 
-	// value
-	if node.val != 0 {
-		(*currItemsPtr)[n].ListVal = append((*currItemsPtr)[n].ListVal, Item{Val: node.val})
+	if newline {
+		fmt.Println()
+	}
+}
+
+func buildItems(nodes []Node, currItemsPtr []*Item) {
+	// fmt.Printf("%v\n", *currItemsPtr)
+	if len(nodes) == 0 {
+		return
+	}
+
+	node := nodes[0]
+	nodes = nodes[1:]
+
+	lastIndex := len(currItemsPtr) - 1
+
+	if node.start {
+		// add an item to the list
+		i := Item{List: true}
+
+		// append to current item
+		currItemsPtr[lastIndex].ListVal = append(currItemsPtr[lastIndex].ListVal, &i)
+		currItemsPtr = append(currItemsPtr, &i)
+	} else if node.end {
+		currItemsPtr = currItemsPtr[:lastIndex]
 	} else {
-		// start
-		(*currItemsPtr) = append((*currItemsPtr), &Item{List: true})
+		currItemsPtr[lastIndex].ListVal = append(currItemsPtr[lastIndex].ListVal, &Item{Val: node.val})
+		// fmt.Println(lastItem)
 	}
 
-	return buildItems(nodes, index, currItemsPtr)
+	buildItems(nodes, currItemsPtr)
 }
 
 /* either [, ], or a number */
@@ -49,7 +67,7 @@ type Node struct {
 func parseLine(line string) []Node {
 	var nodes []Node
 
-	for x := 0; x < len(line); x++ {
+	for x := 1; x < len(line)-1; x++ {
 		c := line[x]
 
 		if c == ',' {
@@ -93,11 +111,15 @@ func main() {
 		fmt.Println(line1)
 		fmt.Println(line2)
 
-		ind := 0
-		fmt.Println(buildItems(parseLine(line1), &ind, &[]*Item{}))
-		ind = 0
-		fmt.Println(buildItems(parseLine(line2), &ind, &[]*Item{}))
+		ind1 := &Item{List: true}
+		buildItems(parseLine(line1), []*Item{ind1})
+		ind1.printAll(true)
+
+		ind2 := &Item{List: true}
+		buildItems(parseLine(line2), []*Item{ind2})
+		ind2.printAll(true)
 
 		scanner.Scan()
+		fmt.Println("------------------------------")
 	}
 }
