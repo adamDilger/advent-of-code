@@ -24,9 +24,14 @@ func main() {
 		t := sc.Text()
 		line := []rune(t)
 
-		for _, c := range line {
+		for i, c := range line {
 			if unicode.IsNumber(c) {
 				firstNum, _ = strconv.Atoi(string(c))
+				break
+			}
+
+			if wordNum := isWord(line[i:]); wordNum != 0 {
+				firstNum = wordNum
 				break
 			}
 		}
@@ -36,6 +41,11 @@ func main() {
 				lastNum, _ = strconv.Atoi(string(line[i]))
 				break
 			}
+
+			if wordNum := isWord(line[i:]); wordNum != 0 {
+				lastNum = wordNum
+				break
+			}
 		}
 
 		fmt.Printf("%d:%d - %s\n", firstNum, lastNum, t)
@@ -43,4 +53,28 @@ func main() {
 	}
 
 	fmt.Printf("total: %d\n", total)
+}
+
+var words = []string{
+	"one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+}
+
+func isWord(in []rune) int {
+word_loop:
+	for i, word := range words {
+		// check each word for a match
+		if len(word) > len(in) {
+			continue
+		}
+
+		for wi, wc := range word {
+			if wc != in[wi] {
+				continue word_loop
+			}
+		}
+
+		return i + 1
+	}
+
+	return 0
 }
