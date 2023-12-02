@@ -64,23 +64,44 @@ func main() {
 		games = append(games, g)
 	}
 
-	// The Elf would first like to know which games would have been possible if the bag contained only 12 red cubes, 13 green cubes, and 14 blue cubes?
-	red_max := 12
-	green_max := 13
-	blue_max := 14
-
 	total_sum := 0
 
-outer_loop:
 	for _, g := range games {
+		total := 1
+
+		red_min := 0
+		green_min := 0
+		blue_min := 0
+
 		for _, ss := range g.subsets {
-			if ss.green > green_max || ss.red > red_max || ss.blue > blue_max {
-				continue outer_loop
+			if ss.red > red_min {
+				red_min = ss.red
+			}
+
+			if ss.blue > blue_min {
+				blue_min = ss.blue
+			}
+
+			if ss.green > green_min {
+				green_min = ss.green
 			}
 		}
 
-		total_sum += g.id
+		if red_min > 0 {
+			total *= red_min
+		}
+
+		if blue_min > 0 {
+			total *= blue_min
+		}
+		if green_min > 0 {
+			total *= green_min
+		}
+
+		fmt.Printf("sum: %d\n", total)
+
+		total_sum += total
 	}
 
-	fmt.Printf("sum: %d\n", total_sum)
+	fmt.Printf("total: %d\n", total_sum)
 }
