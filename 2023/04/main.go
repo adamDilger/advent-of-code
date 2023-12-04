@@ -13,10 +13,13 @@ type Game struct {
 	numbers        []int
 
 	matches map[int]bool
+
+	copies int
 }
 
 func main() {
 	file, err := os.Open("input.txt")
+	// file, err := os.Open("test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -33,10 +36,6 @@ func main() {
 
 		left := strings.Trim(line[strings.Index(line, ":"):strings.Index(line, "|")], ": ")
 		right := strings.Trim(line[strings.Index(line, "|")+2:], "| ")
-
-		println(line)
-		println(left)
-		println(right)
 
 		g.winningNumbers = parseNumberList(left)
 		g.numbers = parseNumberList(right)
@@ -57,20 +56,18 @@ func main() {
 		}
 	}
 
+	for i, g := range games {
+		fmt.Println(i+1, len(g.matches), g.copies)
+		m := len(g.matches)
+
+		for j := i + 1; j < i+1+m; j++ {
+			games[j].copies += 1 + g.copies
+		}
+	}
+
 	total := 0
 	for _, g := range games {
-		m := len(g.matches)
-		if m == 0 {
-			continue
-		}
-
-		points := 1
-		for i := 1; i < m; i++ {
-			points = (points * 2)
-		}
-
-		fmt.Println(points, g)
-		total += points
+		total += 1 + g.copies
 	}
 	fmt.Println(total)
 }
