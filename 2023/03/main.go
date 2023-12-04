@@ -15,12 +15,22 @@ type PartNumber struct {
 	width     int
 }
 
+type Symbol struct {
+	x, y int
+	gear bool
+
+	matches map[int]bool
+}
+
 var partNumbers []PartNumber
 
 var isParsingNumber bool
 var currentParsedNumber []rune
 
+var symbols []Symbol
 var symbolMap [][]bool
+
+var partNumberMap [][]int
 
 func main() {
 	// file, err := os.Open("test.txt")
@@ -42,6 +52,7 @@ func main() {
 		fmt.Println(line)
 
 		symbolMap = append(symbolMap, make([]bool, len(line)))
+		partNumberMap = append(partNumberMap, make([]int, len(line)))
 
 		for x, c := range line {
 			if unicode.IsNumber(c) {
@@ -56,6 +67,7 @@ func main() {
 			}
 
 			if c != '.' {
+				symbols = append(symbols, Symbol{x: x, y: y, gear: c == '*', matches: make(map[int]bool)})
 				symbolMap[y][x] = true
 			}
 		}
@@ -68,46 +80,59 @@ func main() {
 		y++
 	}
 
-	var validParts []PartNumber
+	var validSymbols []Symbol
 
-outer_loop:
-	for _, p := range partNumbers {
-		for i := max(0, p.x-1); i < min(p.x+p.width+1, len(symbolMap[0])); i++ {
-			// above
-			if symbolMap[max(0, p.y-1)][i] {
-				validParts = append(validParts, p)
-				continue outer_loop
+	maxWidthIndex := len(partNumberMap[0]) - 1
+
+	for _, s := range symbols {
+		// above
+		if s.y != 0 {
+			for x := max(0, s.x-1); x <= min(maxWidthIndex, s.x+1); x++ {
+				pn := partNumberMap[s.y-1][x]
+				if pn != 0 {
+					s.matches[pn] = true
+				}
 			}
+		}
 
-			// below
-			if p.y+1 != len(symbolMap[p.y]) {
-				if symbolMap[p.y+1][i] {
-					validParts = append(validParts, p)
-					continue outer_loop
+		// below
+		if s.y < maxWidthIndex {
+			for x := max(0, s.x-1); x <= min(maxWidthIndex, s.x+1); x++ {
+				pn := partNumberMap[s.y+1][x]
+				if pn != 0 {
+					s.matches[pn] = true
 				}
 			}
 		}
 
 		// left
-		if p.x != 0 {
-			if symbolMap[p.y][p.x-1] {
-				validParts = append(validParts, p)
-				continue outer_loop
+		if s.x != 0 {
+			pn := partNumberMap[s.y][s.x-1]
+			if pn != 0 {
+				s.matches[pn] = true
 			}
 		}
 
 		// right
-		if p.x+p.width != len(symbolMap[p.y]) {
-			if symbolMap[p.y][p.x+p.width] {
-				validParts = append(validParts, p)
-				continue outer_loop
+		if s.x < maxWidthIndex {
+			pn := partNumberMap[s.y][s.x+1]
+			if pn != 0 {
+				s.matches[pn] = true
 			}
 		}
+
+		if len(s.matches) > 0 {
+			validSymbols = append(validSymbols, s)
+		}
+
+		// fmt.Printf("[%d:%d]: %v\n", s.x, s.y, s.matches)
 	}
 
 	total := 0
-	for _, p := range validParts {
-		total += p.num
+	for _, s := range validSymbols {
+		for m := range s.matches {
+			total += m
+		}
 	}
 	fmt.Println(total)
 }
@@ -127,4 +152,8 @@ func addPartNumber(x, y int) {
 
 	currentParsedNumber = []rune{}
 	isParsingNumber = false
+
+	for i := x - width; i < x; i++ {
+		partNumberMap[y][i] = num
+	}
 }
