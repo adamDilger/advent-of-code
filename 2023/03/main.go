@@ -135,6 +135,19 @@ func main() {
 		}
 	}
 	fmt.Println(total)
+
+	total = 0
+	for _, s := range validSymbols {
+		ratio := 1
+		if s.gear && len(s.matches) == 2 {
+			for m := range s.matches {
+				ratio *= m
+			}
+
+			total += ratio
+		}
+	}
+	fmt.Println(total)
 }
 
 func addPartNumber(x, y int) {
