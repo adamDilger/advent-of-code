@@ -8,10 +8,13 @@ import (
 	"strings"
 )
 
-// "soil-to-fert" : map[seed-int]fert-int
 type RangeOffset struct {
 	seedStart, seedEnd int
 	offset             int
+}
+
+type SeedRange struct {
+	start, end int
 }
 
 var rangeOffsetMap = make(map[string][]RangeOffset)
@@ -29,7 +32,8 @@ func main() {
 
 	sc.Scan()
 	_, seedLine, _ := strings.Cut(sc.Text(), "seeds: ")
-	seeds := parseIntList(seedLine)
+	seedRanges := parseSeedList(seedLine)
+	fmt.Println(seedRanges)
 
 	sc.Scan()
 
@@ -37,7 +41,7 @@ func main() {
 
 	for sc.Scan() {
 		line := sc.Text()
-		println(line)
+		// println(line)
 
 		if line == "" {
 			firstLine = true
@@ -60,26 +64,33 @@ func main() {
 		rangeOffsetMap[currentKey] = append(rangeOffsetMap[currentKey], RangeOffset{seedStart: source, seedEnd: source + length, offset: dest - source})
 	}
 
-	// Seed 79, soil 81, fertilizer 81, water 81, light 74, temperature 78, humidity 78, location 82.
-	lowestLocation := -1
+	minSeed := 0
+	minLocation := int(^uint(0) >> 1)
 
-	for _, seed := range seeds {
-		soil := getValueFromRanges(rangeOffsetMap, "seed-to-soil", seed)
-		fert := getValueFromRanges(rangeOffsetMap, "soil-to-fertilizer", soil)
-		water := getValueFromRanges(rangeOffsetMap, "fertilizer-to-water", fert)
-		light := getValueFromRanges(rangeOffsetMap, "water-to-light", water)
-		temperature := getValueFromRanges(rangeOffsetMap, "light-to-temperature", light)
-		humidity := getValueFromRanges(rangeOffsetMap, "temperature-to-humidity", temperature)
-		location := getValueFromRanges(rangeOffsetMap, "humidity-to-location", humidity)
+	for _, r := range seedRanges {
+		fmt.Printf("Seed %d: %d\n", r.start, r.end)
 
-		fmt.Printf("Seed %d, soil %d, fertilizer %d, water %d, light %d, temperature %d, humidity %d, location %d\n", seed, soil, fert, water, light, temperature, humidity, location)
+		seed := r.start
 
-		if lowestLocation < 0 || location < lowestLocation {
-			lowestLocation = location
+		for seed <= r.end {
+			cl := calculateLocation(seed)
+
+			if cl < minLocation {
+				minLocation = cl
+				minSeed = seed
+			}
+
+			// if it ain't broke...
+			if cl+1000 == calculateLocation(seed+1000) {
+				seed += 1000
+			} else {
+				seed++
+			}
 		}
 	}
 
-	println(lowestLocation)
+	println(minSeed)
+	println(minLocation)
 }
 
 func getValueFromRanges(in map[string][]RangeOffset, key string, seed int) int {
@@ -113,4 +124,33 @@ func parseIntList(s string) []int {
 	}
 
 	return numbers
+}
+
+func parseSeedList(s string) []SeedRange {
+	values := parseIntList(s)
+
+	out := []SeedRange{}
+
+	for i := 0; i < len(values); i += 2 {
+		out = append(out, SeedRange{start: values[i], end: values[i] + values[i+1]})
+	}
+
+	return out
+}
+
+var count int
+
+func calculateLocation(seed int) int {
+	soil := getValueFromRanges(rangeOffsetMap, "seed-to-soil", seed)
+	fert := getValueFromRanges(rangeOffsetMap, "soil-to-fertilizer", soil)
+	water := getValueFromRanges(rangeOffsetMap, "fertilizer-to-water", fert)
+	light := getValueFromRanges(rangeOffsetMap, "water-to-light", water)
+	temperature := getValueFromRanges(rangeOffsetMap, "light-to-temperature", light)
+	humidity := getValueFromRanges(rangeOffsetMap, "temperature-to-humidity", temperature)
+	location := getValueFromRanges(rangeOffsetMap, "humidity-to-location", humidity)
+
+	// fmt.Printf("Seed %d, soil %d, fertilizer %d, water %d, light %d, temperature %d, humidity %d, location %d\n", seed, soil, fert, water, light, temperature, humidity, location)
+	// fmt.Printf("Seed %d, location %d\n", seed, location)
+
+	return location
 }
