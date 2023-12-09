@@ -20,7 +20,7 @@ func (c Card) Compare(other Card) int {
 }
 
 var cards = []Card{
-	'A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2',
+	'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J',
 }
 
 var cardRanking = map[Card]int{
@@ -81,6 +81,10 @@ func parseHands(f *os.File) []Hand {
 		for _, c := range fields[0] {
 			hand.cards = append(hand.cards, Card(c))
 			hand.cardCounts[Card(c)]++
+
+			if c == 'J' {
+				hand.jokerCount++
+			}
 		}
 
 		for r, c := range hand.cardCounts {
@@ -112,6 +116,8 @@ type Hand struct {
 	counts map[int][]Card
 
 	bid int
+
+	jokerCount int
 
 	handType HandType
 }
@@ -158,11 +164,23 @@ func (h Hand) calculateHand() HandType {
 	}
 
 	if _, ok := h.counts[4]; ok {
+		if h.jokerCount > 0 {
+			return FIVE_OF_A_KIND
+		}
+
 		return FOUR_OF_A_KIND
 	}
 
 	_, three_ok := h.counts[3]
 	two, two_ok := h.counts[2]
+
+	if three_ok && h.jokerCount == 2 {
+		return FIVE_OF_A_KIND // if two jokers, 5 of a kind
+	}
+
+	if three_ok && h.jokerCount == 3 || three_ok && h.jokerCount == 1 {
+		return FOUR_OF_A_KIND // if any joker, it's always a four of a kind
+	}
 
 	if three_ok && two_ok {
 		return FULL_HOUSE
@@ -172,12 +190,26 @@ func (h Hand) calculateHand() HandType {
 		return THREE_OF_A_KIND
 	}
 
-	if two_ok {
-		if len(two) == 2 {
+	if two_ok && len(two) == 2 {
+		if h.jokerCount == 2 {
+			return FOUR_OF_A_KIND
+		} else if h.jokerCount == 1 {
+			return FULL_HOUSE
+		} else {
 			return TWO_PAIR
+		}
+	}
+
+	if two_ok && len(two) == 1 {
+		if h.jokerCount > 0 {
+			return THREE_OF_A_KIND
 		} else {
 			return ONE_PAIR
 		}
+	}
+
+	if h.jokerCount == 1 {
+		return ONE_PAIR
 	}
 
 	return HIGH_CARD
