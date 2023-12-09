@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"strconv"
@@ -60,39 +61,13 @@ func main() {
 	println(total)
 }
 
-func parseHands(f *os.File) []Hand {
+func parseHands(f io.Reader) []Hand {
 	var hands []Hand
 
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
-		hand := Hand{
-			cardCounts: make(map[Card]int),
-			counts:     make(map[int][]Card),
-		}
-
 		fields := strings.Fields(sc.Text())
-
-		if bid, err := strconv.Atoi(fields[1]); err == nil {
-			hand.bid = bid
-		} else {
-			panic(err)
-		}
-
-		for _, c := range fields[0] {
-			hand.cards = append(hand.cards, Card(c))
-			hand.cardCounts[Card(c)]++
-
-			if c == 'J' {
-				hand.jokerCount++
-			}
-		}
-
-		for r, c := range hand.cardCounts {
-			hand.counts[c] = append(hand.counts[c], r)
-		}
-
-		hand.handType = hand.calculateHand()
-
+		hand := NewHand(fields[1], fields[0])
 		hands = append(hands, hand)
 	}
 
@@ -106,6 +81,36 @@ func parseHands(f *os.File) []Hand {
 	})
 
 	return hands
+}
+
+func NewHand(bidString, handString string) Hand {
+	hand := Hand{
+		cardCounts: make(map[Card]int),
+		counts:     make(map[int][]Card),
+	}
+
+	if bid, err := strconv.Atoi(bidString); err == nil {
+		hand.bid = bid
+	} else {
+		panic(err)
+	}
+
+	for _, c := range handString {
+		hand.cards = append(hand.cards, Card(c))
+		hand.cardCounts[Card(c)]++
+
+		if c == 'J' {
+			hand.jokerCount++
+		}
+	}
+
+	for r, c := range hand.cardCounts {
+		hand.counts[c] = append(hand.counts[c], r)
+	}
+
+	hand.handType = hand.calculateHand()
+
+	return hand
 }
 
 type Hand struct {
@@ -175,18 +180,25 @@ func (h Hand) calculateHand() HandType {
 	two, two_ok := h.counts[2]
 
 	if three_ok && h.jokerCount == 2 {
-		return FIVE_OF_A_KIND // if two jokers, 5 of a kind
-	}
-
-	if three_ok && h.jokerCount == 3 || three_ok && h.jokerCount == 1 {
-		return FOUR_OF_A_KIND // if any joker, it's always a four of a kind
-	}
-
-	if three_ok && two_ok {
+		return FIVE_OF_A_KIND
+	} else if three_ok && h.jokerCount == 1 {
 		return FULL_HOUSE
 	}
 
+	if three_ok && two_ok {
+		if h.jokerCount == 3 {
+			return FIVE_OF_A_KIND
+		}
+
+		return FULL_HOUSE
+
+	}
+
 	if three_ok {
+		if h.jokerCount == 3 {
+			return FOUR_OF_A_KIND
+		}
+
 		return THREE_OF_A_KIND
 	}
 
