@@ -6,10 +6,11 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strings"
 )
 
 func main() {
-	file, err := os.Open("input.txt")
+	file, err := os.Open("test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -23,33 +24,55 @@ func main() {
 		fmt.Println(n)
 	}
 
-	fmt.Println(doThing(0, 0, dir, nodes, nodes["AAA"]))
-}
-
-func doThing(moveCount int, dirIndex int, dirs []Dir, nodes map[string]Node, node Node) int {
-	if node.Name == "ZZZ" {
-		fmt.Println("Found", moveCount)
-		return moveCount
+	var ghosts []Node
+	for _, n := range allNodes {
+		if n.Start {
+			ghosts = append(ghosts, n)
+		}
 	}
 
-	fmt.Println(dirs)
-	dir := dirs[dirIndex%len(dirs)]
+	var dirs []Dir
+	for _, d := range dir {
+		dirs = append(dirs, d)
+	}
 
-	moveCount++
-	dirIndex++
+	moveCount := 0
 
-	if dir == L {
-		fmt.Println("Going left", nodes[node.Left])
-		return doThing(moveCount, dirIndex, dirs, nodes, nodes[node.Left])
-	} else {
-		fmt.Println("Going right", nodes[node.Right])
-		return doThing(moveCount, dirIndex, dirs, nodes, nodes[node.Right])
+	for {
+		println("Move", moveCount)
+		isFinished := true
+		for _, n := range ghosts {
+			if !n.End {
+				isFinished = false
+				break
+			}
+		}
+
+		if isFinished {
+			fmt.Println("Finished", moveCount)
+			break
+		}
+
+		dir := dirs[moveCount%len(dirs)]
+		moveCount++
+
+		// move all nodes
+		for i := range ghosts {
+			if dir == L {
+				// fmt.Println("Going left", nodes[node.Left])
+				ghosts[i] = nodes[ghosts[i].Left]
+			} else {
+				// fmt.Println("Going right", nodes[node.Right])
+				ghosts[i] = nodes[ghosts[i].Right]
+			}
+		}
 	}
 }
 
 type Node struct {
 	Name        string
 	Left, Right string
+	End, Start  bool
 }
 
 type Dir string
@@ -74,7 +97,7 @@ func parseNodes(f io.Reader) ([]Dir, []Node) {
 	sc.Scan()
 
 	// AAA = (BBB, CCC)
-	r := regexp.MustCompile("([A-Z]+) = \\(([A-Z]+), ([A-Z]+)\\)")
+	r := regexp.MustCompile("([A-Z1-9]+) = \\(([A-Z1-9]+), ([A-Z1-9]+)\\)")
 	for sc.Scan() {
 		line := sc.Text()
 
@@ -83,6 +106,8 @@ func parseNodes(f io.Reader) ([]Dir, []Node) {
 			Name:  res[1],
 			Left:  res[2],
 			Right: res[3],
+			End:   strings.HasSuffix(res[1], "Z"),
+			Start: strings.HasSuffix(res[1], "A"),
 		})
 	}
 
