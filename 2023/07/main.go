@@ -28,7 +28,6 @@ var cardRanking = map[Card]int{
 	'A': 0,
 	'K': 1,
 	'Q': 2,
-	'J': 3,
 	'T': 4,
 	'9': 5,
 	'8': 6,
@@ -38,6 +37,7 @@ var cardRanking = map[Card]int{
 	'4': 10,
 	'3': 11,
 	'2': 12,
+	'J': 13,
 }
 
 func main() {
@@ -182,7 +182,7 @@ func (h Hand) calculateHand() HandType {
 	if three_ok && h.jokerCount == 2 {
 		return FIVE_OF_A_KIND
 	} else if three_ok && h.jokerCount == 1 {
-		return FULL_HOUSE
+		return FOUR_OF_A_KIND
 	}
 
 	if three_ok && two_ok {
@@ -191,7 +191,6 @@ func (h Hand) calculateHand() HandType {
 		}
 
 		return FULL_HOUSE
-
 	}
 
 	if three_ok {
