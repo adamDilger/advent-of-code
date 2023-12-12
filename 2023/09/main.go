@@ -64,14 +64,14 @@ func predictHistories(h *History) {
 
 	if end {
 		h.prediction = 0
-		h.values = append(h.values, h.prediction)
+		h.values = append([]int{h.prediction}, h.values...)
 		return
 	}
 
 	predictHistories(h.child)
 
-	h.prediction = h.child.prediction + h.values[len(h.values)-1]
-	h.values = append(h.values, h.prediction)
+	h.prediction = (h.child.prediction * -1) + h.values[0]
+	h.values = append([]int{h.prediction}, h.values...)
 }
 
 type History struct {
