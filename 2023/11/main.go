@@ -22,6 +22,8 @@ func main() {
 		fmt.Println(i+1, g)
 	}
 
+	expandDist := 1_000_000 - 1 // why minus 1?
+
 	// expand all columns
 	for x := 0; x < grid.width; x++ {
 		isEmpty := true
@@ -39,12 +41,12 @@ func main() {
 			for i, g := range grid.galaxies {
 				if g[0] >= x {
 					fmt.Printf("Expanding galaxy [%d:%d]\n", g[0], g[1])
-					grid.galaxies[i][0]++
+					grid.galaxies[i][0] += expandDist
 				}
 			}
 
-			grid.width++
-			x++
+			grid.width += expandDist
+			x += expandDist
 		}
 	}
 
@@ -65,16 +67,16 @@ func main() {
 			for i, g := range grid.galaxies {
 				if g[1] >= y {
 					fmt.Printf("Expanding galaxy [%d:%d]\n", g[0], g[1])
-					grid.galaxies[i][1]++
+					grid.galaxies[i][1] += expandDist
 				}
 			}
 
-			grid.height++
-			y++
+			grid.height += expandDist
+			y += expandDist
 		}
 	}
 
-	fmt.Println(grid)
+	fmt.Println(grid.height, grid.width)
 
 	pairsCalculated := make(map[string]bool)
 
