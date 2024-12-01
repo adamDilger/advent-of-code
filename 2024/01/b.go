@@ -1,26 +1,16 @@
-package main
+package weekone
 
 import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
-	"slices"
 )
 
-func main() {
-	file, err := os.Open("./input.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	run(file)
-}
-
-func runB(f io.Reader) int {
+func RunB(f io.Reader) int {
 	sc := bufio.NewScanner(f)
 
-	var l1, l2 []int
+	var l1 []int
+	l2 := make(map[int]int)
 
 	for sc.Scan() {
 		t := sc.Text()
@@ -32,27 +22,18 @@ func runB(f io.Reader) int {
 		var left, right int
 		fmt.Sscanf(t, "%d   %d\n", &left, &right)
 		l1 = append(l1, left)
-		l2 = append(l2, right)
-	}
 
-	slices.Sort(l1)
-	slices.Sort(l2)
-	// fmt.Println(l1, l2)
+		l2[right] = (l2[right] + 1)
+	}
 
 	sum := 0
-	for item := range l1 {
-		count := 0
-		idx := 0
+	for _, i := range l1 {
+		if l2[i] == 0 {
+			continue
+		}
 
-		fmt.Println(sum)
-		return sum
-	}
-}
-
-func abs(x int) int {
-	if x < 0 {
-		return x * -1
+		sum += l2[i] * i
 	}
 
-	return x
+	return sum
 }

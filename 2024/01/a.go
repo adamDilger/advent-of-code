@@ -1,23 +1,13 @@
-package main
+package weekone
 
 import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"slices"
 )
 
-func main() {
-	file, err := os.Open("./input.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	run(file)
-}
-
-func run(f io.Reader) int {
+func RunA(f io.Reader) int {
 	sc := bufio.NewScanner(f)
 
 	var l1, l2 []int
@@ -47,7 +37,6 @@ func run(f io.Reader) int {
 		sum += abs(l - r)
 	}
 
-	fmt.Println(sum)
 	return sum
 }
 
