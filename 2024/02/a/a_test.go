@@ -1,28 +1,39 @@
-package weektwo
+package a
 
 import (
 	"os"
 	"testing"
 )
 
-const expectedA = 2
-const expectedB = 31
-
 func Test_RunA(t *testing.T) {
-	file, err := os.Open("./test.txt")
+	file, err := os.Open("../test.txt")
 	if err != nil {
 		panic(err)
 	}
 
+	expected := 2
 	got := RunA(file)
 
-	if expectedA != got {
-		t.Errorf("A: Expected %d got %d", expectedA, got)
+	if expected != got {
+		t.Errorf("A: Expected %d got %d", expected, got)
+	}
+}
+
+func Test_RunA_properInput(t *testing.T) {
+	file, err := os.Open("../input.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	expected := 332
+	got := RunA(file)
+
+	if 332 != got {
+		t.Errorf("A: Expected %d got %d", expected, got)
 	}
 }
 
 func Test_RunA_Line(t *testing.T) {
-
 	safeData := [][]int{
 		{7, 6, 4, 2, 1},
 		{1, 3, 6, 7, 9},
@@ -47,16 +58,3 @@ func Test_RunA_Line(t *testing.T) {
 		}
 	}
 }
-
-// func Test_RunB(t *testing.T) {
-// 	file, err := os.Open("./test.txt")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	got := RunB(file)
-//
-// 	if expectedB != got {
-// 		t.Errorf("B: Expected %d got %d", expectedB, got)
-// 	}
-// }

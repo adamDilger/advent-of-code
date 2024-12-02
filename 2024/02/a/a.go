@@ -1,8 +1,9 @@
-package weektwo
+package a
 
 import (
 	"bufio"
 	"io"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -44,44 +45,24 @@ func RunA(f io.Reader) int {
 }
 
 func isSafe(s []int) bool {
-	var isIncreasing bool
-
-	switch {
-	case s[0] == s[1]:
-		// must differ by at least one
-		return false
-	case s[0] < s[1]:
-		isIncreasing = true
-	case s[0] > s[1]:
-		isIncreasing = false
-	default:
-		panic("Unknown state")
-	}
-
-	lastNum := s[0]
-
 	for i := 1; i < len(s); i++ {
-		if s[i] == lastNum {
+		diff := abs(s[i] - s[i-1])
+
+		if diff < 1 || diff > 3 {
 			return false
 		}
-
-		if abs(s[i]-lastNum) > 3 {
-			return false
-		}
-
-		if isIncreasing && s[i] < lastNum {
-			return false
-		}
-
-		if !isIncreasing && s[i] > lastNum {
-			return false
-		}
-
-		// number is ok
-		lastNum = s[i]
 	}
 
-	return true
+	if slices.IsSorted(s) {
+		return true
+	}
+
+	slices.Reverse(s)
+	if slices.IsSorted(s) {
+		return true
+	}
+
+	return false
 }
 
 func abs(x int) int {
