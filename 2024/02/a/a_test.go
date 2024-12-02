@@ -1,4 +1,4 @@
-package weektwo
+package a
 
 import (
 	"os"
@@ -6,10 +6,9 @@ import (
 )
 
 const expectedA = 2
-const expectedB = 31
 
 func Test_RunA(t *testing.T) {
-	file, err := os.Open("./test.txt")
+	file, err := os.Open("../test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -22,7 +21,6 @@ func Test_RunA(t *testing.T) {
 }
 
 func Test_RunA_Line(t *testing.T) {
-
 	safeData := [][]int{
 		{7, 6, 4, 2, 1},
 		{1, 3, 6, 7, 9},
@@ -47,16 +45,3 @@ func Test_RunA_Line(t *testing.T) {
 		}
 	}
 }
-
-// func Test_RunB(t *testing.T) {
-// 	file, err := os.Open("./test.txt")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-//
-// 	got := RunB(file)
-//
-// 	if expectedB != got {
-// 		t.Errorf("B: Expected %d got %d", expectedB, got)
-// 	}
-// }

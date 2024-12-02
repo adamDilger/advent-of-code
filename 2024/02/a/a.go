@@ -1,4 +1,4 @@
-package weektwo
+package a
 
 import (
 	"bufio"

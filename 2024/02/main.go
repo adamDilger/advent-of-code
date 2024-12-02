@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"weektwo"
+	"weektwo/a"
+	"weektwo/b"
 )
 
 func main() {
@@ -13,8 +14,8 @@ func main() {
 	}
 
 	if len(os.Args) < 2 || os.Args[1] == "a" {
-		fmt.Println("A:", weektwo.RunA(file))
+		fmt.Println("A:", a.RunA(file))
 	} else {
-		fmt.Println("A:", weektwo.RunB(file))
+		fmt.Println("A:", b.RunB(file))
 	}
 }
