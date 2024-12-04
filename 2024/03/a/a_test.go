@@ -11,9 +11,20 @@ func Test_RunA(t *testing.T) {
 		panic(err)
 	}
 
-	expected := 0
+	expected := 161
 	got := RunA(file)
 
+	if expected != got {
+		t.Errorf("A: Expected %d got %d", expected, got)
+	}
+
+	file, err = os.Open("../input.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	expected = 184576302
+	got = RunA(file)
 	if expected != got {
 		t.Errorf("A: Expected %d got %d", expected, got)
 	}
