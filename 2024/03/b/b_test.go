@@ -6,12 +6,12 @@ import (
 )
 
 func Test_RunB(t *testing.T) {
-	file, err := os.Open("../test.txt")
+	file, err := os.Open("../test_b.txt")
 	if err != nil {
 		panic(err)
 	}
 
-	expected := 0
+	expected := 48
 	got := RunB(file)
 
 	if expected != got {
