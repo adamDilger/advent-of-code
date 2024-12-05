@@ -1,0 +1,107 @@
+package a
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+)
+
+func RunA(f io.Reader) int {
+	sc := bufio.NewScanner(f)
+
+	grid := Grid{}
+
+	for sc.Scan() {
+		t := sc.Text()
+
+		if sc.Err() != nil {
+			panic(sc.Err())
+		}
+
+		grid = append(grid, []rune(t))
+	}
+
+	for _, l := range grid {
+		for _, c := range l {
+			fmt.Print(string(c))
+		}
+		fmt.Println()
+	}
+
+	sum := 0
+	for y, l := range grid {
+		for x := range l {
+			found, path := find(grid, x, y, 'X', []XY{})
+			if found {
+				fmt.Println(path)
+				panic("FUK")
+				sum += 1
+			}
+		}
+	}
+
+	return sum
+}
+
+func getNextLetter(l rune) rune {
+	switch l {
+	case 'X':
+		return 'M'
+	case 'M':
+		return 'A'
+	case 'A':
+		return 'S'
+	}
+
+	return ' '
+}
+
+type XY struct {
+	x, y int
+}
+
+func find(g Grid, x, y int, needle rune, path []XY) (bool, []XY) {
+	if g.get(x, y) != needle {
+		return false, path
+	}
+
+	if needle == 'S' {
+		return true, append(path, XY{x: x, y: y})
+	}
+
+	next := getNextLetter(needle)
+	if next == ' ' {
+		panic("Invalid")
+	}
+
+	// look for all adjacent letters that match
+	positions := [][2]int{
+		{-1, -1}, // top left
+		{-1, 0},  // left
+		{-1, 1},  // bottom left
+		{0, 1},   // bottom
+		{0, -1},  // top
+		{1, -1},  // top right
+		{1, 0},   // right
+		{1, 1},   // bottom right
+	}
+
+	for _, p := range positions {
+		found, newPath := find(g, x+p[0], y+p[1], next, path)
+		if found {
+			return true, newPath
+		}
+	}
+
+	return false, path
+}
+
+type Grid [][]rune
+
+func (g Grid) get(x, y int) rune {
+	if x < 0 || y < 0 || y >= len(g) || x >= len(g[y]) {
+		return ' '
+	}
+
+	return g[y][x]
+}
