@@ -11,7 +11,7 @@ func Test_RunB(t *testing.T) {
 		panic(err)
 	}
 
-	expected := 0
+	expected := 123
 	got := RunB(file)
 
 	if expected != got {
